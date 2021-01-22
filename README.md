@@ -21,7 +21,7 @@ in apps.py add ```'pyplanet.apps.contrib.match_results',``` and it will load.
 match_results Plugin that on EndMap saves Rank, BestRaceTime, Mappoints gathered into DB or HTML File (Default is HTML)
 see example code:
 
-https://github.com/w1lla/pyplanet_plugins/blob/main/docs/matchresults.html
+https://w1lla.github.io/pyplanet_plugins/matchresults.html
 
 !!! Notice !!!
 
