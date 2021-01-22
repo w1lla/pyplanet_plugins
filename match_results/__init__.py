@@ -3,6 +3,7 @@ from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.trackmania import callbacks as tm_signals
 from pyplanet.contrib.setting import Setting
 from pyplanet.utils import times
+from pyplanet.utils import style
 from .models import Save
 
 class match_results(AppConfig):
@@ -45,7 +46,7 @@ class match_results(AppConfig):
 		for player in players:
 			print(player['player'].nickname)
 			mappoints = int(player['map_points'])
-			nickname = player['player'].nickname
+			nickname = style.style_strip(player['player'].nickname, STRIP_ALL)
 			increment_rank = rank
 			position_endmap = int(increment_rank)
 			best_racetime = int(player['best_race_time'])
