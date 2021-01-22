@@ -3,20 +3,7 @@ PyPlanet Apps made by W1lla
 
 # Plugins made:
 
-- Muffin Plugin 
 - Match Results Plugin
-
-# Muffin Plugin
-
-in apps.py add ```'pyplanet.apps.contrib.muffin',``` and it will load, only not in ShootMania.
-
-Muffin Plugin based on TMGery's MX /muffin command.
-
-See 
-
-https://w1lla.github.io/pyplanet_plugins/preview.html
-
-for images of the plugin.
 
 # Match Results Plugin
 
