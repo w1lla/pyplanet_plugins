@@ -34,6 +34,9 @@ Where map_id = 1 you can change it to anything you like but for each map you nee
 
 see example code under [folder=www] for more information.
 
+#notice TM2020 Bug:
 
+In TM2020 the Rank for 1st is 2 and for 2 is 1??.
 
+Nadeo has been notified.
 
