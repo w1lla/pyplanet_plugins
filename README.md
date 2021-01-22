@@ -12,7 +12,11 @@ in apps.py add ```'pyplanet.apps.contrib.muffin',``` and it will load, only not 
 
 Muffin Plugin based on TMGery's MX /muffin command.
 
-See preview map for images of the plugin.
+See 
+
+https://w1lla.github.io/pyplanet_plugins/preview.html
+
+for images of the plugin.
 
 #Match Results Plugin
 
