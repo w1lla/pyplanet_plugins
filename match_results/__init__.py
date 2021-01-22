@@ -46,7 +46,8 @@ class match_results(AppConfig):
 		for player in players:
 			print(player['player'].nickname)
 			mappoints = int(player['map_points'])
-			nickname = style.style_strip(player['player'].nickname, STRIP_ALL)
+			nickname = style.style_strip(player['player'].nickname)
+			login = player['player'].login
 			increment_rank = rank
 			position_endmap = int(increment_rank)
 			best_racetime = int(player['best_race_time'])
@@ -60,18 +61,23 @@ class match_results(AppConfig):
 			else:
 				with open('matchresults.html', 'a') as myFile:
 					myFile.write('<html>')
+					myFile.write('head')
+					myFile.write('<meta http-equiv = "Content-Type" content = "text/html;charset = UTF-8" />')
+					myFile.write('</head>')
 					myFile.write('<body>')
 					myFile.write('MapName: {} &nbsp; &nbsp; &nbsp;'.format(self.instance.map_manager.current_map.name));
 					myFile.write('<table width=\"100%\" border=\"0\" align=\"center\">');
 					myFile.write('<tr>');
 					myFile.write('<td width=\"60\" class=\"tablehead\" bgcolor="#FFFFF">Rank</td>');
 					myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Nickname</td>');
+					myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Login</td>');
 					myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Best Race Time</td>');
 					myFile.write('<td width=\"80\" class=\"tablehead\" bgcolor="#FFFFF">Points</td>');
 					myFile.write('</td>');
 					myFile.write('<tr>');
 					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(position_endmap));
 					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(nickname));
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(login));
 					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(times.format_time(int(best_racetime))));
 					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(mappoints));
 					myFile.write('</tr>');
