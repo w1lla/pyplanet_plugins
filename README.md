@@ -1,5 +1,5 @@
 # pyplanet_plugins
-PyPlanet Plugins made by W1lla
+PyPlanet Apps made by W1lla
 
 # Plugins made:
 
@@ -18,25 +18,11 @@ See preview map for images of the plugin.
 
 in apps.py add ```'pyplanet.apps.contrib.match_results',``` and it will load.
 
+match_results Plugin that on EndMap saves Rank, BestRaceTime, Mappoints gathered into DB or HTML File (Default is HTML)
+see example code:
 
-match_results Plugin that on EndMap saves Rank, BestRaceTime, Mappoints gathered.
+https://github.com/w1lla/pyplanet_plugins/blob/main/docs/matchresults.html
 
-For example
+!!! Notice !!!
 
-```INSERT INTO `match_results` (`id`, `map_id`, `player_id`, `map_points`, `rank`, `bestracetime`, `created_at`) VALUES
-(1, 1, 1, 10, 1, 196347, '2021-01-22 11:53:32');```
-
-To query it out of the database its quite easy:
-
-```SELECT * FROM player INNER JOIN match_results ON match_results.player_id = player.id Where match_results.map_id=1 ORDER BY match_results.rank ASC```
-
-Where map_id = 1 you can change it to anything you like but for each map you need to do the same query.
-
-see example code under [folder=www] for more information.
-
-#notice TM2020 Bug:
-
-In TM2020 the Rank for 1st is 2 and for 2 is 1??.
-
-Nadeo has been notified.
-
+In TM2020 the rank in callback trackmania.scores will be removed but the plugin doesn't use that. It uses an increment based on players.
