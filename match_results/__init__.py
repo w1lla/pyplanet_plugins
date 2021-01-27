@@ -1,4 +1,7 @@
 import time
+import asyncio
+import os
+import shutil
 
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.trackmania import callbacks as tm_signals
@@ -7,6 +10,8 @@ from pyplanet.contrib.setting import Setting
 from pyplanet.contrib.command import Command
 from pyplanet.utils import times
 from pyplanet.utils.style import STRIP_ALL, style_strip
+from .models import Save
+from .views import MatchResultsView
 
 class match_results(AppConfig):
 	
@@ -24,8 +29,8 @@ class match_results(AppConfig):
 		super().__init__(*args, **kwargs)
 		
 		self.namespace = 'match'
-		
 		self.enabled = False
+		self.list_view = None
 
 	async def on_start(self):
 		"""
@@ -40,20 +45,48 @@ class match_results(AppConfig):
 		# Listen to signals.
 		self.context.signals.listen(tm_signals.scores, self.scores)
 		
+		# Register commands.
+		await self.instance.command_manager.register(Command(command='results', target=self.show_matchresults,
+															 description='Displays Latest Match Results.'))
+		
 		# Start MatchSaving HTML on command
-		await self.instance.command_manager.register(Command(command='start', namespace=self.namespace, target=self.match_start, perms='match_results:start', admin=True, description='Start MatchSaving HTML/DB').add_param('', nargs='*', type=str, required=False, help='Start MatchSaving HTML'))
+		await self.instance.command_manager.register(Command(command='start', aliases=['mstart'], namespace=self.namespace, target=self.match_start, perms='match_results:start', admin=True, description='Start MatchSaving HTML/DB').add_param('', nargs='*', type=str, required=False, help='Start MatchSaving HTML'))
 		
 		# Stop MatchSaving HTML on command
-		await self.instance.command_manager.register(Command(command='stop', namespace=self.namespace, target=self.match_stop, perms='match_results:start', admin=True, description='Stop MatchSaving HTML/DB').add_param('', nargs='*', type=str, required=False, help='Stop MatchSaving HTML'))		
-			
+		await self.instance.command_manager.register(Command(command='stop', aliases=['mstop'], namespace=self.namespace, target=self.match_stop, perms='match_results:start', admin=True, description='Stop MatchSaving HTML/DB').add_param('', nargs='*', type=str, required=False, help='Stop MatchSaving HTML'))		
+		
+	
+	async def show_matchresults(self, player, **kwargs):
+		"""
+		Show map list to player for current map or map provided.. Provide player instance.
+
+		:param player: Player instance.
+		:param map: Map instance or current map.
+		:param kwargs: ...
+		:type player: pyplanet.apps.core.maniaplanet.models.Player
+		:return: View instance.
+		"""
+		self.list_view = MatchResultsView(self)
+		await self.list_view.display(player=player.login)
+		
 	async def match_start(self, player, data, **kwargs):
+		message = '$o$ff0Admin $fff{}$z$s$ff0 has decided the match will start after a map restart.'.format(player.nickname)
+		await Save.execute(Save.delete())
+		#make a copy of the matchresults.html to work with
+		src="matchresults.html"
+		dst="previous_matchresults_{}.html".format(time.strftime("%Y-%m-%d_%H-%M-%S"))
+		shutil.copy(src,dst)
+		os.remove('matchresults.html')
 		self.enabled = True
-		message = '$ff0Admin $fff{}$z$s$ff0 has Started the Match !!!!'.format(player.nickname)
 		await self.instance.chat(message)
+		await asyncio.sleep(5)
+		await self.instance.gbx('RestartMap')
 		
 	async def match_stop(self, player, data, **kwargs):
+	
 		self.enabled = False
-		message = '$ff0Admin $fff{}$z$s$ff0 has Stopped the Match !!!!'.format(player.nickname)
+		self.running = False
+		message = '$o$ff0Admin $fff{}$z$s$ff0 has decided the match ended on the previous map.'.format(player.nickname)
 		await self.instance.chat(message)
 	
 	async def scores(self, section, players, **kwargs):
@@ -66,7 +99,7 @@ class match_results(AppConfig):
 	async def handle_scores(self, players):
 		timestr = time.strftime("%Y-%m-%d_%H-%M-%S")
 		current_script = await self.instance.mode_manager.get_current_script()
-		with open('matchresults.html','a') as myFile:
+		with open('matchresults.html','a', encoding="utf-8") as myFile:
 			myFile.write('<html>')
 			myFile.write('<head>')
 			myFile.write('<meta http-equiv = "Content-Type" content = "text/html;charset = UTF-8" />')
@@ -82,14 +115,16 @@ class match_results(AppConfig):
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Nickname</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Login</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Best Race Time</td>');
+			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Total CP:</td>');
 			myFile.write('<td width=\"80\" class=\"tablehead\" bgcolor="#FFFFF">Map Points</td>');
 			myFile.write('<td width=\"80\" class=\"tablehead\" bgcolor="#FFFFF">Match Points</td>');
-			myFile.write('</td>');
+			myFile.write('</tr>');
 			rank = 1
 			for player in players:
-				#print(player['player'].nickname)
+				#print(player['player'])
+				player_id = player['player'].get_id()
+				#print(player_id)
 				mappoints = int(player['map_points'])
-				matchpoints = int(player['match_points'])
 				nickname = style_strip(player['player'].nickname, STRIP_ALL)
 				login = player['player'].login
 				increment_rank = rank
@@ -101,13 +136,28 @@ class match_results(AppConfig):
 				#print(mappoints)
 				#print(position_endmap)
 				#print(best_racetime)
+				end_map = Save(map=self.instance.map_manager.current_map, player=player['player'], map_points=mappoints, rank=position_endmap)
+				#print(end_map)
+				await end_map.save()
+				if 'Rounds' in current_script or 'TrackMania/TM_Rounds_Online' in current_script:
+					mapPointsTotal = await Save.execute(Save.select(Save.map_points).where(Save.player == player_id))
+					sum = 0
+					for row in mapPointsTotal:
+						sum = sum + int(row.map_points)
+				else:
+					sum = 0
+				if 'Laps' in current_script or 'TrackMania/TM_Laps_Online' in current_script:
+					cpcount = len(player['best_race_checkpoints'])
+				else:
+					cpcount = 0
 				myFile.write('<tr>');
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(position_endmap));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(nickname));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(login));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(times.format_time(int(best_racetime))));
+				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(cpcount));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(mappoints));
-				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(matchpoints));
+				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(sum));
 				myFile.write('</tr>');
 				rank += 1
 			myFile.write('</table>');
