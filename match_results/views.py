@@ -37,27 +37,19 @@ class MatchResultsView(ManualListView):
 				'sorting': True,
 				'searching': True,
 				'width': 20,
-			},
-			{
-				'name': 'Date',
-				'index': 'Date',
-				'sorting': True,
-				'searching': True,
-				'width': 20,
 			}
 		]
 		
 	async def get_data(self):
-		data = await Save.execute(Save.select(Save, Player, fn.SUM(Save.map_points).alias('totalmappoints')).join(Player).group_by(Player.id).order_by(fn.SUM(Save.map_points).desc()))
+		data = await Save.execute(Save.select(fn.SUM(Save.map_points).alias('totalmappoints'), Save.player_id, Player.nickname, Player.id).join(Player).where(Save.player_id == Player.id).group_by(Player.id, Save.player_id).order_by(fn.SUM(Save.map_points).desc()))
+		# Now we will order by the count, which was aliased to "ct"
 		rank = 1
 		items = []
 		for row in data:
-			date_time_obj = datetime.datetime.strptime(str(row.created_at), '%Y-%m-%d %H:%M:%S')
 			items.append({
 				'Index': rank,
 				'Nickname': row.player.nickname,
 				'Score': row.totalmappoints,
-				'Date': date_time_obj.date()
 			})
 			rank += 1
 		return items
