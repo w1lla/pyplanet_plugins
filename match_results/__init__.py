@@ -36,6 +36,9 @@ class match_results(AppConfig):
 		"""
 		Called on starting the application.
 		"""
+		filename = 'matchresults.html'
+		if not os.path.exists(filename):
+			open(filename, 'w').close()
 		
 		# Init settings.
 		
