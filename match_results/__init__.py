@@ -12,6 +12,7 @@ from pyplanet.utils import times
 from pyplanet.utils.style import STRIP_ALL, style_strip
 from .models import Save
 from .views import MatchResultsView
+from peewee import *
 
 class match_results(AppConfig):
 	
@@ -36,9 +37,6 @@ class match_results(AppConfig):
 		"""
 		Called on starting the application.
 		"""
-		filename = 'matchresults.html'
-		if not os.path.exists(filename):
-			open(filename, 'w').close()
 		
 		# Init settings.
 		
@@ -69,6 +67,7 @@ class match_results(AppConfig):
 		:type player: pyplanet.apps.core.maniaplanet.models.Player
 		:return: View instance.
 		"""
+		
 		self.list_view = MatchResultsView(self)
 		await self.list_view.display(player=player.login)
 		
@@ -76,10 +75,14 @@ class match_results(AppConfig):
 		message = '$o$ff0Admin $fff{}$z$s$ff0 has decided the match will start after a map restart.'.format(player.nickname)
 		await Save.execute(Save.delete())
 		#make a copy of the matchresults.html to work with
-		src="matchresults.html"
-		dst="previous_matchresults_{}.html".format(time.strftime("%Y-%m-%d_%H-%M-%S"))
+		filename = "matchresults/matchresults.html"
+		os.makedirs(os.path.dirname(filename), exist_ok=True)
+		if not os.path.exists(filename):
+			open(filename, 'w').close()
+		src="matchresults/matchresults.html"
+		dst="matchresults/previous_matchresults_{}.html".format(time.strftime("%Y-%m-%d_%H-%M-%S"))
 		shutil.copy(src,dst)
-		os.remove('matchresults.html')
+		os.remove('matchresults/matchresults.html')
 		self.enabled = True
 		await self.instance.chat(message)
 		await asyncio.sleep(5)
@@ -102,7 +105,7 @@ class match_results(AppConfig):
 	async def handle_scores(self, players):
 		timestr = time.strftime("%Y-%m-%d_%H-%M-%S")
 		current_script = await self.instance.mode_manager.get_current_script()
-		with open('matchresults.html','a', encoding="utf-8") as myFile:
+		with open('matchresults/matchresults.html','a', encoding="utf-8") as myFile:
 			myFile.write('<html>')
 			myFile.write('<head>')
 			myFile.write('<meta http-equiv = "Content-Type" content = "text/html;charset = UTF-8" />')
@@ -139,7 +142,7 @@ class match_results(AppConfig):
 				#print(mappoints)
 				#print(position_endmap)
 				#print(best_racetime)
-				end_map = Save(map=self.instance.map_manager.current_map, player=player['player'], map_points=mappoints, rank=position_endmap)
+				end_map = Save(map=self.instance.map_manager.current_map, nickname=player['player'].nickname, player=player['player'], map_points=mappoints, rank=position_endmap)
 				#print(end_map)
 				await end_map.save()
 				if 'Rounds' in current_script or 'TrackMania/TM_Rounds_Online' in current_script:
@@ -164,5 +167,27 @@ class match_results(AppConfig):
 				myFile.write('</tr>');
 				rank += 1
 			myFile.write('</table>');
+			myFile.write('<br>');
+			if 'Rounds' in current_script or 'TrackMania/TM_Rounds_Online' in current_script:
+				myFile.write('Current MatchStandings:&nbsp; &nbsp; &nbsp;');
+				myFile.write('<table width=\"100%\" border=\"0\" align=\"center\">');
+				myFile.write('<tr>');
+				myFile.write('<td width=\"60\" class=\"tablehead\" bgcolor="#FFFFF">Rank</td>');
+				myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Nickname</td>');
+				myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">TotalMatchpoints</td>');
+				myFile.write('</tr>');
+				datas = await Save.execute(Save.select(Save.player_id, Save.nickname, fn.SUM(Save.map_points).alias('totalmappoints')).group_by(Save.player_id, Save.nickname).order_by(fn.SUM(Save.map_points).desc()))
+				index = 0
+				for row in datas:
+					index += 1
+					endmatch_player_nickname = row.nickname
+					endmatch_rank = index
+					endmatch_totalmappoints = row.totalmappoints
+					myFile.write('<tr>');
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(endmatch_rank));
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(endmatch_player_nickname));
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(endmatch_totalmappoints));
+					myFile.write('</tr>');
+				myFile.write('</table>');
 			myFile.write('</body>');
 			myFile.write('</html>');
