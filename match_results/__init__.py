@@ -95,14 +95,14 @@ class match_results(AppConfig):
 		message = '$o$ff0Admin $fff{}$z$s$ff0 has decided the match ended on the previous map.'.format(player.nickname)
 		await self.instance.chat(message)
 	
-	async def scores(self, section, players, **kwargs):
+	async def scores(self, section, players, teams, **kwargs):
 		if not self.enabled:
 			return
 		else:
 			if section == 'EndMap':
-				await self.handle_scores(players)
+				await self.handle_scores(players, teams)
 			
-	async def handle_scores(self, players):
+	async def handle_scores(self, players, teams):
 		timestr = time.strftime("%Y-%m-%d_%H-%M-%S")
 		current_script = await self.instance.mode_manager.get_current_script()
 		with open('matchresults/matchresults.html','a', encoding="utf-8") as myFile:
@@ -121,10 +121,13 @@ class match_results(AppConfig):
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Nickname</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Login</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Best Race Time</td>');
-			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Total CP:</td>');
-			myFile.write('<td width=\"80\" class=\"tablehead\" bgcolor="#FFFFF">Map Points</td>');
-			myFile.write('<td width=\"80\" class=\"tablehead\" bgcolor="#FFFFF">Match Points</td>');
-			myFile.write('</tr>');
+			if 'Laps' in current_script or 'TrackMania/TM_Laps_Online' in current_script:
+				myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Total CP:</td>');
+			if 'Rounds' in current_script or 'TrackMania/TM_Rounds_Online' in current_script:
+				myFile.write('<td width=\"80\" class=\"tablehead\" bgcolor="#FFFFF">Map Points</td>');
+				myFile.write('<td width=\"80\" class=\"tablehead\" bgcolor="#FFFFF">Match Points</td>');
+				myFile.write('</tr>');
+				
 			rank = 1
 			for player in players:
 				#print(player['player'])
@@ -152,20 +155,20 @@ class match_results(AppConfig):
 						sum = sum + int(row.map_points)
 				else:
 					sum = 0
-				if 'Laps' in current_script or 'TrackMania/TM_Laps_Online' in current_script:
-					cpcount = len(player['best_race_checkpoints'])
-				else:
-					cpcount = 0
+				
 				myFile.write('<tr>');
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(position_endmap));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(nickname));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(login));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(times.format_time(int(best_racetime))));
-				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(cpcount));
-				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(mappoints));
-				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(sum));
-				myFile.write('</tr>');
-				rank += 1
+				if 'Laps' in current_script or 'TrackMania/TM_Laps_Online' in current_script:
+					cpcount = len(player['best_race_checkpoints'])
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(cpcount));
+				if 'Rounds' in current_script or 'TrackMania/TM_Rounds_Online' in current_script:
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(mappoints));
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(sum));
+					myFile.write('</tr>');
+					rank += 1
 			myFile.write('</table>');
 			myFile.write('<br>');
 			if 'Rounds' in current_script or 'TrackMania/TM_Rounds_Online' in current_script:
@@ -185,8 +188,24 @@ class match_results(AppConfig):
 					endmatch_totalmappoints = row.totalmappoints
 					myFile.write('<tr>');
 					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(endmatch_rank));
-					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(endmatch_player_nickname));
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(style_strip(endmatch_player_nickname, STRIP_ALL)));
 					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(endmatch_totalmappoints));
+					myFile.write('</tr>');
+				myFile.write('</table>');
+			if 'Team' in current_script or 'TrackMania/TM_Teams_Online' in current_script:
+				myFile.write('Current MatchStandings:&nbsp; &nbsp; &nbsp;');
+				myFile.write('<table width=\"100%\" border=\"0\" align=\"center\">');
+				myFile.write('<tr>');
+				myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Team:</td>');
+				myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">MapPoints:</td>');
+				myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">MatchPoints:</td>');
+				myFile.write('</tr>');
+				for team in teams:
+					#print(team)
+					myFile.write('<tr>');
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(team['name']));
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(team['map_points']));
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(team['match_points']));
 					myFile.write('</tr>');
 				myFile.write('</table>');
 			myFile.write('</body>');
