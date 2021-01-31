@@ -3,11 +3,10 @@ Maniaplanet Core Models. This models are used in several apps and should be cons
 """
 import datetime
 from peewee import *
-
+from pyplanet.core.db import TimedModel
 from pyplanet.apps.core.maniaplanet.models import Map, Player
-from pyplanet.core.db import Model
 
-class Save(Model):
+class Save(TimedModel):
 	map = ForeignKeyField(Map, index=True)
 
 	"""
@@ -19,6 +18,8 @@ class Save(Model):
 	"""
 	The player.
 	"""
+	
+	nickname = CharField(max_length=150)
 
 	map_points = IntegerField()
 
@@ -38,6 +39,10 @@ class Save(Model):
 	"""
 	When is the time driven?
 	"""
-
-	class Meta:
+	
+class Meta:
 		db_table = 'match_results'
+		indexes = (
+			(('player', 'map'), True),
+		)
+		primary_key = False
