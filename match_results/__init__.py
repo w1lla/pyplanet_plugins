@@ -2,6 +2,8 @@ import time
 import asyncio
 import os
 import shutil
+import pycountry
+import re
 
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.trackmania import callbacks as tm_signals
@@ -42,6 +44,9 @@ class match_results(AppConfig):
 		
 		await self.instance.permission_manager.register(
 			'start', 'Start MatchSaving HTML command', app=self, min_level=2)
+			
+		await self.instance.permission_manager.register(
+			'discord', 'Save Discord flag', app=self, min_level=2)
 		
 		# Listen to signals.
 		self.context.signals.listen(tm_signals.scores, self.scores)
@@ -120,6 +125,8 @@ class match_results(AppConfig):
 			myFile.write('<td width=\"60\" class=\"tablehead\" bgcolor="#FFFFF">Rank</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Nickname</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Login</td>');
+			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Nation</td>');
+			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Discord Nation</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Best Race Time</td>');
 			if 'Laps' in current_script or 'TrackMania/TM_Laps_Online' in current_script:
 				myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Total CP:</td>');
@@ -130,11 +137,14 @@ class match_results(AppConfig):
 				
 			rank = 1
 			for player in players:
-				#print(player['player'])
+				#print(players)
 				player_id = player['player'].get_id()
 				#print(player_id)
 				mappoints = int(player['map_points'])
 				nickname = style_strip(player['player'].nickname, STRIP_ALL)
+				country = player['player'].flow.zone.country
+				country_alpha_2 = pycountry.countries.get(name=country)
+				discord = ':flag_{}:'.format(country_alpha_2.alpha_2.lower())
 				login = player['player'].login
 				increment_rank = rank
 				position_endmap = int(increment_rank)
@@ -160,6 +170,8 @@ class match_results(AppConfig):
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(position_endmap));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(nickname));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(login));
+				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(country));
+				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(discord));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(times.format_time(int(best_racetime))));
 				if 'Laps' in current_script or 'TrackMania/TM_Laps_Online' in current_script:
 					cpcount = len(player['best_race_checkpoints'])
