@@ -8,6 +8,7 @@ import re
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.trackmania import callbacks as tm_signals
 
+
 from pyplanet.contrib.setting import Setting
 from pyplanet.contrib.command import Command
 from pyplanet.utils import times
@@ -45,8 +46,14 @@ class match_results(AppConfig):
 		await self.instance.permission_manager.register(
 			'start', 'Start MatchSaving HTML command', app=self, min_level=2)
 			
-		await self.instance.permission_manager.register(
-			'discord', 'Save Discord flag', app=self, min_level=2)
+		self.setting_discord = Setting(
+			'match_results_discord', 'MatchResults Discord flag', Setting.CAT_FEATURES, type=bool, default=True,
+			description='Will show usage for discord flag or not'
+		)
+		
+		await self.context.setting.register(
+			self.setting_discord
+		)
 		
 		# Listen to signals.
 		self.context.signals.listen(tm_signals.scores, self.scores)
@@ -126,7 +133,6 @@ class match_results(AppConfig):
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Nickname</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Login</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Nation</td>');
-			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Discord Nation</td>');
 			myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Best Race Time</td>');
 			if 'Laps' in current_script or 'TrackMania/TM_Laps_Online' in current_script:
 				myFile.write('<td width=\"150\" class=\"tablehead\" bgcolor="#FFFFF">Total CP:</td>');
@@ -170,8 +176,10 @@ class match_results(AppConfig):
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(position_endmap));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(nickname));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(login));
-				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(country));
-				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(discord));
+				if await self.setting_discord.get_value():
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(country));
+				else:
+					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(discord));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(times.format_time(int(best_racetime))));
 				if 'Laps' in current_script or 'TrackMania/TM_Laps_Online' in current_script:
 					cpcount = len(player['best_race_checkpoints'])
