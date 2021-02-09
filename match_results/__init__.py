@@ -7,7 +7,7 @@ import re
 
 from pyplanet.apps.config import AppConfig
 from pyplanet.apps.core.trackmania import callbacks as tm_signals
-
+from pyplanet.apps.core.maniaplanet import callbacks as mp_signals
 
 from pyplanet.contrib.setting import Setting
 from pyplanet.contrib.command import Command
@@ -23,8 +23,8 @@ class match_results(AppConfig):
 	Save RoundPoints on EndMap to DB                                                  
 	"""
 
-	game_dependencies = ['trackmania_next', 'trackmania']
-	app_dependencies = ['core.maniaplanet', 'core.trackmania']
+	game_dependencies = ['trackmania_next', 'trackmania', 'shootmania']
+	app_dependencies = ['core.maniaplanet', 'core.trackmania', 'core.shootmania']
 
 	def __init__(self, *args, **kwargs):
 		"""
@@ -34,6 +34,7 @@ class match_results(AppConfig):
 		
 		self.namespace = 'match'
 		self.enabled = False
+		self.running = False
 		self.list_view = None
 
 	async def on_start(self):
@@ -57,6 +58,7 @@ class match_results(AppConfig):
 		
 		# Listen to signals.
 		self.context.signals.listen(tm_signals.scores, self.scores)
+		self.context.signals.listen(mp_signals.map.map_end, self.map_end)
 		
 		# Register commands.
 		await self.instance.command_manager.register(Command(command='results', target=self.show_matchresults,
@@ -96,16 +98,23 @@ class match_results(AppConfig):
 		shutil.copy(src,dst)
 		os.remove('matchresults/matchresults.html')
 		self.enabled = True
+		self.running = True
 		await self.instance.chat(message)
 		await asyncio.sleep(5)
 		await self.instance.gbx('RestartMap')
 		
 	async def match_stop(self, player, data, **kwargs):
 	
-		self.enabled = False
-		self.running = False
-		message = '$o$ff0Admin $fff{}$z$s$ff0 has decided the match ended on the previous map.'.format(player.nickname)
-		await self.instance.chat(message)
+		if self.enabled and self.running:
+			message = '$o$ff0Admin $fff{}$z$s$ff0 has decided the match will end after this Map.'.format(player.nickname)
+			await self.instance.chat(message)
+			self.running = False
+	
+	async def map_end(self, map):
+		if self.running == False:
+			self.enabled = False
+
+	
 	
 	async def scores(self, section, players, teams, **kwargs):
 		if not self.enabled:
