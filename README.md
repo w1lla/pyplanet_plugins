@@ -49,6 +49,8 @@ Send Server chat to discord and Vice Versa.
 
 No VoiceChat!
 
+in apps.py add ```'pyplanet.apps.contrib.discordbot',``` and it will load.
+
 However there are some bugs:
 
 - Emoijs dont work.
