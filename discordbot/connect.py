@@ -32,7 +32,7 @@ class Threader(Thread):
 
     async def starter(self):
         self.discord_client = discordHost()
-        await self.discord_client.start('ODA3NTA1NTA2NjkyMzY2MzQ4.YB4-Gw.mW0oawIT-g2CQcVV3b1f4rKE4sQ')
+        await self.discord_client.start('')
 		# create the background task and run it in the background
 		
     def run(self):
