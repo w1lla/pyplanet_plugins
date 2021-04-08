@@ -191,7 +191,7 @@ class match_results(AppConfig):
 				else:
 					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(discord));
 				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(times.format_time(int(best_racetime))));
-				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">+{}</td>'.format(times.format_time(int(best_racetime) - int(players[0]['best_race_time'])))));
+				myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">+{}</td>'.format(times.format_time(int(best_racetime) - int(players[0]['best_race_time']))));
 				if 'Laps' in current_script or 'TrackMania/TM_Laps_Online' in current_script:
 					cpcount = len(player['best_race_checkpoints'])
 					myFile.write('<td class=\"celltext\" bgcolor=\"#FFFFF\">{}</td>'.format(cpcount));
