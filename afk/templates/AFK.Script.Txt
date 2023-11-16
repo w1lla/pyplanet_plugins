@@ -1,0 +1,51 @@
+ #Include "MathLib" as ML
+ #Include "TextLib" as TL
+ #Const TIMEOUT {{ afktimeout }}  // Timeout to be Kicked but at the moment!!!! 00:01:30 Minutes 
+
+
+    Boolean isAfk(){
+        declare endTime = GameTime + TIMEOUT;
+        while(GameTime < endTime){
+            if(InputPlayer.RaceState != CTmMlPlayer::ERaceState::Running){
+                return False;
+            }
+            //log("Gonna Sleep for 10 MilliSeconds!!!");
+            sleep(10);
+            //log("I woke Up Again after 10 ms!!!");
+            if (endTime > GameTime){
+            //log("EndTime is greater to GameTime: So be ready for this!!!");
+            //log("Gonna Sleep for 2000 ms!!!!");
+            sleep(2000);
+            //log("I woke up again after 2000 ms!!!!");
+            //log("You are going to be kicked really soon due to inactivity!!!");
+            TriggerPageAction("{{ id }}__Player_AFK");
+            return True;
+            //log("Prepare to be kicked!!!!");
+            }
+        }
+
+        return False;
+    }
+
+    main(){
+        declare startTime = 0;
+        declare timePassed = 0;
+
+        while(True){
+            yield;
+            if(InputPlayer == Null) continue;
+
+            startTime = GameTime;
+
+            while(InputPlayer.RaceState == CTmMlPlayer::ERaceState::Running){
+                timePassed = GameTime - startTime;
+                if(timePassed > Map.MapInfo.TMObjective_AuthorTime){
+                    if(isAfk()) break;
+                }
+
+                sleep(50);
+            }
+
+            sleep(100);
+        }
+    }
