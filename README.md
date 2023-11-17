@@ -6,6 +6,7 @@ PyPlanet Apps made by W1lla
 - Muffin Plugin 
 - Match Results Plugin
 - Inital Discord Bot
+- AFK Plugin
 
 # Muffin Plugin
 
