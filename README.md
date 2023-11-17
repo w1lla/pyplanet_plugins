@@ -58,3 +58,10 @@ However there are some bugs:
 - Commands arent sent to the Discord but i need to figure stuff out like discordname/nick is login from pyplanet database. (like //restart in discord should activate restartmap (It does but ingame you get a error message and not on discord.) Also it might seem that if you are offline, it might trigger it) Needs to be fully tested.
 
 Might be forgetting more but its still initial and in alpha so beware.
+
+# AFK Plugin
+
+in apps.py add ```'pyplanet.apps.contrib.afk',``` and it will load.
+
+- Current Issues:
+ Timeout is set to 100 which corresponds to 50 seconds (Estimate)
