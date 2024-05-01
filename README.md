@@ -66,3 +66,26 @@ in apps.py add ```'pyplanet.apps.contrib.afk',``` and it will load.
 
 - Current Issues:
  Timeout is set to 100 which corresponds to 50 seconds (Estimate)
+
+# Pick And Ban
+
+in apps.py add ```'pyplanet.apps.contrib.pick_and_ban',``` and it will load.
+
+- Pick and Ban maps in Team Gamemodes
+- ````{"steps":[{"team":1,"action":"ban"},{"team":1,"action":"pick"},{"team":2,"action":"pick"},{"team":3,"action":"pick"},{"team":4,"action":"pick"}],"stepDuration":60000,"resultDuration":10000 ``` can be changed to whom ever setting you want.
+- There needs to be an altercation be made in ```\pyplanet\apps\core\trackmania\callbacks.py```:
+- Add the following to the end to make it work: ```
+pickban_complete = Callback(
+	call='Script.PickBan.Complete',
+	namespace='trackmania',
+	code='pickban_complete',
+	target=handle_generic
+)```
+
+To load the matchsettings with the pick or banned maps: For now do //rml testw1lla.txt and do a NextMap (There seem to be some issues in Development for me!)
+
+There seems to be some slight issues:
+- The ServerChat will be filled with the MapUID's which are fine as they will be eventually added towards the matchsettings file.
+- Loading of the new MatchSettings seems to fail through pyplanet read_map_list (Do not understand why but it could be as i am checking if it is being changed in notepad++).
+- For Apparent reason: Only Blue and Red can vote (Tested this alone so it needs some good testing with multiple teams as bots do not do everything.)
+- Make a copy of the Matchsettings and rename it (That seems to work)
