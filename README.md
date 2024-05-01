@@ -72,7 +72,7 @@ in apps.py add ```'pyplanet.apps.contrib.afk',``` and it will load.
 in apps.py add ```'pyplanet.apps.contrib.pick_and_ban',``` and it will load.
 
 - Pick and Ban maps in Team Gamemodes
-- ````{"steps":[{"team":1,"action":"ban"},{"team":1,"action":"pick"},{"team":2,"action":"pick"},{"team":3,"action":"pick"},{"team":4,"action":"pick"}],"stepDuration":60000,"resultDuration":10000 ``` can be changed to whom ever setting you want.
+- ```{"steps":[{"team":1,"action":"ban"},{"team":1,"action":"pick"},{"team":2,"action":"pick"},{"team":3,"action":"pick"},{"team":4,"action":"pick"}],"stepDuration":60000,"resultDuration":10000 ``` can be changed to whom ever setting you want.
 - There needs to be an altercation be made in ```\pyplanet\apps\core\trackmania\callbacks.py```:
 - Add the following to the end to make it work: ```
 pickban_complete = Callback(
